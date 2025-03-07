@@ -15,25 +15,31 @@ SCREEN_SIZE = 800
 COLOR = (0, 0, 255)
 
 
-# TODO add any functions
+# this is the function that will be called recursively to solve the maze
+# it will take in the maze object, the row and column of the current position, and the solution path
 def path_solve_rec(maze, row, col, solution_path):
     if maze.at_end(row, col):
         return True
 
+# find possible moves
     possible_moves = maze.get_possible_moves(row, col)
 
+# loop through the possible moves and check if the maze can move to that position
     for r,c in possible_moves:
         print(r,c)
+        # append the current position to the solution path
         solution_path.append((r, c))
         
+
         if maze.can_move_here(r, c):
             maze.move(r, c, COLOR)
         
         
 
-
+        # recursively call the function to check if the maze can move to the next position
         if path_solve_rec(maze, r, c, solution_path):
             return True
+        # remoove from the solution path if the maze cannot move to the next position, and restore
         solution_path.remove((r,c))
         maze.restore(r, c)
     return False
@@ -43,19 +49,20 @@ def solve(maze):
     """ Solve the maze. The path object should be a list (x, y) of the positions 
         that solves the maze, from the start position to the end position. """
 
-    # TODO add code here
+  
 
-
+# get the start position of the maze
     row, col = maze.get_start_pos()
+    # check if the maze is at the end
     if maze.at_end(row, col):
         return True
 
 
-
+# move the maze to the start position
     print(row, col)
     maze.move(row, col, COLOR)
     solution_path = [] 
-
+# start the recursive process
     path_solve_rec(maze, row, col, solution_path)
 
    

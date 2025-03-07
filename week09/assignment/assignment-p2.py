@@ -58,25 +58,33 @@ def get_color():
     color = COLORS[current_color_index]
     current_color_index += 1
     return color
-def path_solve_rec(maze, row, col):
+
+def path_solve_rec(maze, row, col, color):
+    # check if maze is at end
     if maze.at_end(row, col):
         return True
-    color = get_color()
-
+    
+    # define the color from the passed in color, this will be the starting color
+    color = color
+    # get the possible moves from current position
     possible_moves = maze.get_possible_moves(row, col)
-
+ 
+#  loop throughj possible_moves anad check if the current position can be moved to the possible moves
     for r,c in possible_moves:
-        print(r,c)
+        print(f"possible moves for{row, col}{r},{c}")
 
-        
+        # if maze can move to the possible moves, move to the possible moves
         if maze.can_move_here(r, c):
             maze.move(r, c, color)
         
         
-
-        
-        if threading.Thread(target=path_solve_rec, args=(maze, r, c)).start():
+        # check if the maze is at the end
+        if maze.at_end(r, c):
             return True
+        if threading.Thread(target=path_solve_rec, args=(maze, r, c, color)).start():
+            return True
+        color = get_color()
+        
         
     return False
 
@@ -95,11 +103,13 @@ def solve_find_end(maze):
         return True
 
 
-
+# print to the start postion to make sure it's working
     print(row, col)
+    # color first position
     maze.move(row, col, COLOR)
+    # solve the rest of the maze using recursion
 
-    path_solve_rec(maze, row, col)
+    path_solve_rec(maze, row, col, COLOR)
 
    
         
