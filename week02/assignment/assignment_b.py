@@ -19,25 +19,52 @@ from cse251functions import *
 ###############################
 # DO NOT USE YOUR OWN GLOBALS #
 ###############################
+# here is my very owen thread class, which is a subclass of the threading.Thread class
+# takes the number n as an argument
+# the run method finds the product of all numbers between 1 and n
+class myVeryOwnThread(threading.Thread):
+    def __init__(self, n):
+        threading.Thread.__init__(self)
+        self.n = n
+        self.product = 1
 
-# TODO - Create a thread class, see this week's reading to learn how (delete this line and
-# replace with your own description of the purpose of your class)
+    def run(self):
+        for i in range(1, self.n):
+         self.product *= i
+    
 
 
 def main():
-    # Instantiate your thread class and pass in 5 (delete this line).
-    # Test (assert) if its product attribute is equal to 45 (delete this line).
-    # Note: do no use 'yourThread' as the name of your thread object (delete this line).
-    assert yourThread.product == 24, f'The product should equal 24 but instead was {
-        yourThread.product}'
+
+
+    # first instance of my thread class
+    firstThread = myVeryOwnThread(5)
+
+    # we start the first Thread
+    firstThread.start()
+
+    # we wait for the first thread to finish
+    firstThread.join()
+    
+    assert firstThread.product == 24, f'The product should equal 24 but instead was {
+        firstThread.product}'
 
     # Repeat, passing in 10 (delete this line).
-    assert yourThread.product == 362880, f'The product should equal 362880 but instead was {
-        yourThread.product}'
+    secondThread = myVeryOwnThread(10)
+    secondThread.start()
+    secondThread.join()
+    # Repeat, passing in 10 (delete this line).
+    assert secondThread.product == 362880, f'The product should equal 362880 but instead was {
+        secondThread.product}'
+    
+    # we do this one more time wth 15
+    thirdThread = myVeryOwnThread(15)
+    thirdThread.start()
+    thirdThread.join()
 
     # Repeat, passing in 15 (delete this line).
-    assert yourThread.product == 87178291200, f'The product should equal 87178291200 but instead was {
-        yourThread.product}'
+    assert thirdThread.product == 87178291200, f'The product should equal 87178291200 but instead was {
+        thirdThread.product}'
 
 
 if __name__ == '__main__':

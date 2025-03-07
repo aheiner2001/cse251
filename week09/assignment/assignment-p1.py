@@ -16,19 +16,65 @@ COLOR = (0, 0, 255)
 
 
 # TODO add any functions
+def path_solve_rec(maze, row, col, solution_path):
+    if maze.at_end(row, col):
+        return True
+
+    possible_moves = maze.get_possible_moves(row, col)
+
+    for r,c in possible_moves:
+        print(r,c)
+        solution_path.append((r, c))
+        
+        if maze.can_move_here(r, c):
+            maze.move(r, c, COLOR)
+        
+        
+
+
+        if path_solve_rec(maze, r, c, solution_path):
+            return True
+        solution_path.remove((r,c))
+        maze.restore(r, c)
+    return False
+
 
 def solve(maze):
     """ Solve the maze. The path object should be a list (x, y) of the positions 
         that solves the maze, from the start position to the end position. """
 
     # TODO add code here
+
+
+    row, col = maze.get_start_pos()
+    if maze.at_end(row, col):
+        return True
+
+
+
+    print(row, col)
+    maze.move(row, col, COLOR)
     solution_path = [] 
+
+    path_solve_rec(maze, row, col, solution_path)
+
+   
+        
+
+ 
+
+
+
+    
+
+
     
     # Remember that an object is passed by reference, so you can pass in the 
     # solution_path object, modify it, and you won't need to return it from 
     # your recursion function
     
     return solution_path
+    # return solve(maze) probably dont want to have this be recurise
 
 
 def get_solution_path(filename):
@@ -41,6 +87,7 @@ def get_solution_path(filename):
     solution_path = solve(maze)
 
     print(f'Number of drawing commands for = {screen.get_command_count()}')
+    print(solution_path)
 
     done = False
     speed = 1
@@ -73,6 +120,7 @@ def find_paths():
         solution_path = get_solution_path(filename)
         print(f'Found path has length          = {len(solution_path)}')
     print('*' * 40)
+   
 
 
 def main():

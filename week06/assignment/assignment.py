@@ -43,9 +43,7 @@ class SpaceShip():
     spaceship_makes = ('Mercury', 'Venus', 'Earth', 'Mars', 'Jupiter', 'Saturn', 'Uranus', 'Neptune',
                        'Pluto')
 
-    spaceship_models = [f'{random.choice(string.ascii_uppercase)}{
-        n}' for n in range(20)]
-
+    spaceship_models = [f"{random.choice(string.ascii_uppercase)}{n}" for n in range(20)]
     spaceship_years = [i for i in range(2100, 2150)]
 
     def __init__(self):
@@ -61,7 +59,7 @@ class SpaceShip():
         self.display()
 
     def display(self):
-        print(f'{self.make} {self.model}, {self.year}')
+        print(f'{self.make} {self.model}, {self.year}',flush=True)
 
 
 class NonBlockingQueue():
@@ -89,29 +87,89 @@ class NonBlockingQueue():
 class SpaceShipFactory(threading.Thread):
     """ This is a factory.  It will create spaceships and place them on the queue """
 
-    def __init__(self):
+    def __init__(self,buyer_count,id, sem_remaining_capacity,sem_spaceship_in_stock, queue, lock,barrier_factory,factory_stats):
+        threading.Thread.__init__(self)
         self.spaceships_to_produce = random.randint(
             200, 300)     # Don't change
+        self.sem_remaining_capacity = sem_remaining_capacity
+        self.sem_spaceship_in_stock = sem_spaceship_in_stock
+        self.queue = queue
+        self.lock = lock
+        self.barrier_factory = barrier_factory
+        self.ships_made = 0
+        self.id = id
+        self.factory_stats = factory_stats
+        self.buyer_count =buyer_count
 
     def run(self):
         # TODO produce the spaceship, the send them to the buyer
 
+        for  i in range(self.spaceships_to_produce):
+            self.sem_remaining_capacity.acquire()
+            ship  = SpaceShip()
+           
+            
+            # print(f'semaphre remaining capacity acquire {self.queue.size()}')
+            self.queue.put(ship)
+            with self.lock:
+                # how would i haave know to do this ????
+                index = min(self.queue.size(), len(self.factory_stats) - 1)
+                self.factory_stats[index] += 1
+
+            self.sem_spaceship_in_stock.release()
+            # print(f'semaphre stock capacity release {self.queue.size()}')
+        print(f'Thread {self.id} calling wait on barrier\n', end="")
+        self.barrier_factory.wait()
+        if self.id == 0:
+            
+            for _ in range(self.buyer_count):
+                self.queue.put(None)
+                self.sem_spaceship_in_stock.release()
         # TODO wait until all of the factories are finished producing spaceships
 
         # TODO "Wake up/signal" the buyer one more time and send the stop flag.
         # Select one factory to do this (hint: use if factory_id == 0)
-        pass
+        
 
 
 class SpaceShipBuyer(threading.Thread):
     """ This is a buyer that receives spaceships from the queue """
 
-    def __init__(self):
-        pass
+    def __init__(self,sem_remaining_capacity, sem_spaceship_in_stock, queue, lock, barrier_buyer,buyer_stats):
+        threading.Thread.__init__(self)
+        self.sem_remaining_capacity = sem_remaining_capacity
+        self.sem_spaceship_in_stock = sem_spaceship_in_stock
+        self.queue = queue
+        self.lock = lock
+        self.barrier_buyer = barrier_buyer
+        self.buyer_stats = buyer_stats
+        self.ships_bought = 0
+
 
     def run(self):
         while True:
             # TODO get a spaceship
+            self.sem_spaceship_in_stock.acquire()
+            # print(f'semaphre stock capacity acquire {self.queue.size()}')
+            
+
+            ship = self.queue.get()
+
+            if ship is None:
+                break
+            
+            with self.lock:
+                # how would i haave know to do this ????
+                index = min(self.queue.size(), len(self.buyer_stats) - 1)
+                self.buyer_stats[index] += 1
+               
+            self.ships_bought +=1
+
+
+            self.sem_remaining_capacity.release()
+           
+            # print(f'semaphre remaining capacity release {self.queue.size()}')
+       
 
             # Sleep a little - don't change.  This is the last line of the loop
             time.sleep(random.random() / (SLEEP_REDUCE_FACTOR))
@@ -128,15 +186,46 @@ def run_production(factory_count, buyer_count):
     begin_time = time.perf_counter()
 
     # TODO Create semaphore(s)
+    sem_remaining_capacity = threading.Semaphore(MAX_QUEUE_SIZE)
+
+    sem_spaceship_in_stock = threading.Semaphore(0)
+
+    queue = NonBlockingQueue()
+
+    barrier_factory = threading.Barrier(factory_count)
+
+    barrier_buyer = threading.Barrier(buyer_count)
+
     # TODO Create queue
     # TODO Create lock(s) -- if needed
     # TODO Create barrier(s)
 
-    # This is used to track the number of cars receives by each dealer
     buyer_stats = list([0] * buyer_count)
+
     factory_stats = list([0] * factory_count)
 
+    lock = threading.Lock()
+
     # TODO create your factories
+    factories = []
+    for i in range(factory_count):
+        factory = SpaceShipFactory(buyer_count,i, sem_remaining_capacity, sem_spaceship_in_stock, queue, lock, barrier_factory,factory_stats)
+        factories.append(factory)
+        factory.start()
+
+    buyers = []
+    for i in range(buyer_count):
+        buyer = SpaceShipBuyer(sem_remaining_capacity, sem_spaceship_in_stock, queue, lock, barrier_buyer,buyer_stats)
+        buyers.append(buyer)
+        buyer.start()  
+
+    for thread in factories:
+        thread.join()
+    for thread in buyers:
+        thread.join()
+    
+
+    
 
     # TODO create your buyers
 

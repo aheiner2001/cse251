@@ -58,13 +58,65 @@ def get_color():
     color = COLORS[current_color_index]
     current_color_index += 1
     return color
+def path_solve_rec(maze, row, col):
+    if maze.at_end(row, col):
+        return True
+    color = get_color()
+
+    possible_moves = maze.get_possible_moves(row, col)
+
+    for r,c in possible_moves:
+        print(r,c)
+
+        
+        if maze.can_move_here(r, c):
+            maze.move(r, c, color)
+        
+        
+
+        
+        if threading.Thread(target=path_solve_rec, args=(maze, r, c)).start():
+            return True
+        
+    return False
 
 
 def solve_find_end(maze):
     """ finds the end position using threads.  Nothing is returned """
     # When one of the threads finds the end position, stop all of them
     # TODO - add code here
-    pass
+
+
+    # find the start position
+    row, col = maze.get_start_pos()
+
+    # check if the start position is the end position
+    if maze.at_end(row, col):
+        return True
+
+
+
+    print(row, col)
+    maze.move(row, col, COLOR)
+
+    path_solve_rec(maze, row, col)
+
+   
+        
+
+ 
+
+
+
+    
+
+
+
+
+
+
+    # change color to go left
+    
 
 
 def find_end(filename, delay):

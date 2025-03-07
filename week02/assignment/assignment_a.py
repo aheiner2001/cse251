@@ -17,6 +17,8 @@ e. How will you ensure that one thread doesn't change the value of
    won't be able to run your threads simultaneously)
 f. How do you modify the value of a global variable (see https://stackoverflow.com/questions/10588317/python-function-global-variables)
 '''
+
+
 import threading
 from cse251functions import *
 
@@ -26,18 +28,37 @@ PRODUCT = 0
 
 def main():
 
-    # Test your thread/function first with 5 (so 1 x 2 x 3 x 4 = 24) (replace this line with your own comment)
-    #assert PRODUCT == 24, f'The product should equal 45 but instead was {
-    #    PRODUCT}'
+   def product_of_numbers(n):
+      global PRODUCT
+      PRODUCT = 1
+      for i in range(1, n):
+         PRODUCT *= i
+      return PRODUCT
+   
+   t = threading.Thread(target=product_of_numbers, args=(5,))
+   t.start()
+   t.join()
 
-    # Then with 10 (replace this line with your own comment)
-    #assert PRODUCT == 362880, f'The product should equal 362880 but instead was {
-    #    PRODUCT}'
+   assert PRODUCT == 24, f'The product should equal 45 but instead was {
+       PRODUCT}'
 
-    # Then with 15 (replace this line with your own comment)
-    #assert PRODUCT == 87178291200, f'The product should equal 87178291200 but instead was {
-    #    PRODUCT}'
-    pass # delete this line
+# start a thread with the target function product_of_numbers and the argument 10
+   t = threading.Thread(target=product_of_numbers, args=(10,))
+   t.start()
+   t.join()
+    
+   assert PRODUCT == 362880, f'The product should equal 362880 but instead was {
+       PRODUCT}'
+
+
+# start a thread with the target function product_of_numbers and the argument 15
+   t = threading.Thread(target=product_of_numbers, args=(15,))
+   t.start()
+   t.join()
+    
+   assert PRODUCT == 87178291200, f'The product should equal 87178291200 but instead was {
+       PRODUCT}'
+   
 
 if __name__ == '__main__':
     main()

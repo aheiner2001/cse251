@@ -65,40 +65,39 @@ def create_new_frame(image_file, green_file, process_file):
 
 
 # TODO add any functions you need here
-
-
+def process_frames(frame: int):
+    image_file = rf'elephant/image{frame:03d}.png'
+    green_file = rf'green/image{frame:03d}.png'
+    process_file = rf'processed/image{frame:03d}.png'
+    create_new_frame(image_file, green_file, process_file)
 
 if __name__ == '__main__':
     all_process_time = timeit.default_timer()
 
-    # Use two lists: one to track the number of CPUs and the other to track
-    # the time it takes to process the images given this number of CPUs.
     xaxis_cpus = []
     yaxis_times = []
 
-    # process the 10th frame (TODO modify this to loop over all frames)
-    image_number = 10
-
-    image_file = rf'elephant/image{image_number:03d}.png'
-    green_file = rf'green/image{image_number:03d}.png'
-    process_file = rf'processed/image{image_number:03d}.png'
-
-    start_time = timeit.default_timer()
-    create_new_frame(image_file, green_file, process_file)
-    print(f'\nTime To Process all images = {timeit.default_timer() - start_time}')
+    for cpu_count in range(1, CPU_COUNT + 1):
+        start_time = timeit.default_timer()
+        
+        with mp.Pool(cpu_count) as p:
+            p.map(process_frames, list(range(1, FRAME_COUNT + 1)))
+        
+        elapsed_time = timeit.default_timer() - start_time
+        xaxis_cpus.append(cpu_count)
+        yaxis_times.append(elapsed_time)
+        
+        print(f'Time to process with {cpu_count} CPUs: {elapsed_time}')
 
     print(f'Total Time for ALL processing: {timeit.default_timer() - all_process_time}')
 
-    # create plot of results and also save it to a PNG file
     plt.plot(xaxis_cpus, yaxis_times, label=f'{FRAME_COUNT}')
-    
-    plt.title('CPU Core yaxis_times VS CPUs')
+    plt.title('CPU Core Times VS CPUs')
     plt.xlabel('CPU Cores')
     plt.ylabel('Seconds')
     plt.legend(loc='best')
-
     plt.tight_layout()
     plt.savefig(f'Plot for {FRAME_COUNT} frames.png')
     plt.show()
-    
+
     create_signature_file("CSE251W25")
