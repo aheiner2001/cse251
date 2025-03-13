@@ -12,7 +12,8 @@ Questions:
    Which search is "better" in your opinion? You might need to define better. 
    (see https://stackoverflow.com/questions/20192445/which-procedure-we-can-use-for-maze-exploration-bfs-or-dfs)
    >
-   >
+   >It seems to be breadth-first search (BFS) because it is exploring all possible paths at the same time.
+    >BFS is better because it is faster and more efficient than DFS
 '''
 
 import math
@@ -80,9 +81,12 @@ def path_solve_rec(maze, row, col, color):
         
         # check if the maze is at the end
         if maze.at_end(r, c):
+            
             return True
         if threading.Thread(target=path_solve_rec, args=(maze, r, c, color)).start():
+            
             return True
+
         color = get_color()
         
         

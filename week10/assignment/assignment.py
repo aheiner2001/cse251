@@ -9,24 +9,24 @@ Requirements
    
 Questions:
 1. How many processes did you specify for each pool:
-   >Finding primes:
-   >Finding words in a file:
-   >Changing text to uppercase:
-   >Finding the sum of numbers:
-   >Web request to get names of Star Wars people:
+   >Finding primes:4
+   >Finding words in a file: 10 
+   >Changing text to uppercase: 4
+   >Finding the sum of numbers:4
+   >Web request to get names of Star Wars people:10
    
-   >How do you determine these numbers:
+   >How do you determine these numbers: My computer has 8 cores, so I decided to use half of the cores for each pool. and i tried to use 16 for the io bound but it was avergagin around 8 sec, so i went down to 10 which seems to be the fastest.
    
 2. Specify whether each of the tasks is IO Bound or CPU Bound?
-   >Finding primes:
-   >Finding words in a file:
-   >Changing text to uppercase:
-   >Finding the sum of numbers:
-   >Web request to get names of Star Wars people:
+   >Finding primes: CPU BOUnd
+   >Finding words in a file: IO BOUND
+   >Changing text to uppercase: CPU BOUND
+   >Finding the sum of numbers:CPU BOUND
+   >Web request to get names of Star Wars people: IO BOUND
    
 3. What was your overall time, with:
-   >one process in each of your five pools:  ___ seconds
-   >with the number of processes you show in question one:  ___ seconds
+   >one process in each of your five pools:  34.5 seconds
+   >with the number of processes you show in question one:  6.68 seconds
 '''
 
 import glob
@@ -72,53 +72,33 @@ def is_prime(n: int):
 
 
 def task_prime(value):
-    """
-    Use the is_prime() above
-    Add the following to the global list:
-        {value} is prime
-            - or -
-        {value} is not prime
-    """
-    pass
+    # return with the is prime function
+    return is_prime(value)
 
 
 def task_word(word):
-    """
-    search in file 'words.txt'
-    Add the following to the global list:
-        {word} Found
-            - or -
-        {word} not found *****
-    """
-    pass
+    # open words.txt and search for the word return if the wrod is found
+    
+    with open('words.txt') as f:
+        words = f.read().splitlines()
+        for w in words:
+            if word in w:
+                return w
+        return None
+    
 
 
 def task_upper(text):
-    """
-    Add the following to the global list:
-        {text} ==>  uppercase version of {text}
-    """
-    pass
-
+    # returns the uppercase of the text
+    return text.upper()
 
 def task_sum(start_value, end_value):
-    """
-    Add the following to the global list:
-        sum of {start_value:,} to {end_value:,} = {total:,}
-    """
-    pass
-
+    # the sum funciton add them up without having to loop through them all
+    return sum(range(start_value, end_value + 1))
 
 def task_name(url):
-    """
-    use requests module
-    Add the following to the global list:
-        {url} has name <name>
-            - or -
-        {url} had an error receiving the information
-    """
-    pass
-
+#    returns the name
+    return requests.get(url).json()['name']
 
 def load_json_file(filename):
     if os.path.exists(filename):
@@ -133,35 +113,61 @@ def main():
     begin_time = time.time()
     count = 0
     
-    # TODO Create process pools
+    # created the list for the pools
+    pools = []
+
+    # each pool in created
+   
+    prime_pool = mp.Pool(processes=4)
+    word_pool = mp.Pool(processes=10)
+    upper_pool = mp.Pool(processes=4)
+    sum_pool = mp.Pool(processes=4)
+    name_pool = mp.Pool(processes=10)    
+
+    # append pools to a list
+    pools.append(prime_pool)
+    pools.append(word_pool) 
+    pools.append(upper_pool)
+    pools.append(sum_pool)
+    pools.append(name_pool)
+
+
+
 
     # The below code is example code to show you the logic of what you are supposed to do.
     # Remove it and replace with using process pools with apply_async calls.
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    # task_files = glob.glob("tasks/*.task")
-    # for filename in task_files:
-    #     # print()
-    #     # print(filename)
-    #     task = load_json_file(filename)
-    #     print(task)
-    #     count += 1
-    #     task_type = task['task']
-    #     if task_type == TYPE_PRIME:
-    #         task_prime(task['value'])
-    #     elif task_type == TYPE_WORD:
-    #         task_word(task['word'])
-    #     elif task_type == TYPE_UPPER:
-    #         task_upper(task['text'])
-    #     elif task_type == TYPE_SUM:
-    #         task_sum(task['start'], task['end'])
-    #     elif task_type == TYPE_NAME:
-    #         task_name(task['url'])
-    #     else:
-    #         print(f'Error: unknown task type {task_type}')
+    task_files = glob.glob("tasks/*.task")
+    for filename in task_files:
+        # print()
+        # print(filename)
+        task = load_json_file(filename)
+        print(task)
+        count += 1
+        task_type = task['task']
+
+        #  i modified the code to use async programming
+        if task_type == TYPE_PRIME:
+            prime_pool.apply_async(func=task_prime, args=(task['value'],), callback=result_primes.append)
+        elif task_type == TYPE_WORD:
+            word_pool.apply_async(func=task_word, args=(task['word'],), callback=result_words.append)
+        elif task_type == TYPE_UPPER:
+            upper_pool.apply_async(func=task_upper, args=(task['text'],), callback=result_upper.append)
+        elif task_type == TYPE_SUM:
+            sum_pool.apply_async(func=task_sum, args=(task['start'], task['end']), callback=result_sums.append)
+        elif task_type == TYPE_NAME:
+            name_pool.apply_async(func=task_name, args=(task['url'],), callback=result_names.append)
+        else:
+            print(f'Error: unknown task type {task_type}')
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
-    # TODO start pools and block until they are done before trying to print
+    # start pools and block until they are done before trying to print
+    for pool in pools:
+        pool.close()
+        pool.join()
+        
 
+  
     def print_list(lst):
         for item in lst:
             print(item)
